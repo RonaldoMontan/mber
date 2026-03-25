@@ -10,7 +10,9 @@ from .serializers import (
     UserSerializer, 
     RegisterSerializer, 
     ChangePasswordSerializer,
-    AssignGroupSerializer
+    AssignGroupSerializer,
+    LoginSerializer,
+    LogoutSerializer
 )
 from .permissions import IsManager, IsOwnerOrManager
 
@@ -33,6 +35,7 @@ class RegisterView(generics.CreateAPIView):
 
 class LoginView(generics.GenericAPIView):
     permission_classes = [AllowAny]
+    serializer_class = LoginSerializer
 
     def post(self, request):
         username = request.data.get('username')
@@ -61,6 +64,7 @@ class LoginView(generics.GenericAPIView):
 
 class LogoutView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = LogoutSerializer
 
     def post(self, request):
         try:
