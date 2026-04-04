@@ -18,11 +18,17 @@ from django.contrib import admin
 from django.urls import path, include
 from menu.views import health
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from menu.views import DishViewSet
+from rest_framework import routers
+
+router = routers.DefaultRouter()
+router.register(r'dishes', DishViewSet) # Rota: /api/dishes/
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('health/', health, name='health'),
     path('api/', include('accounts.urls')),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),           
+    path('api/', include(router.urls))
 ]
