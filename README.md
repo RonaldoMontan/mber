@@ -37,6 +37,31 @@ docker compose down
 
 Access: http://localhost:8000
 
+## Default Credentials (Development)
+
+A default user is automatically created during migrations for development/testing:
+
+- **Username**: `developer`
+- **Password**: `dev123`
+- **Email**: `developer@mber.com`
+- **Group**: Manager
+
+**Note**: This user has full Manager permissions and can be used to test all API endpoints.
+
+## API Documentation
+
+### Swagger UI
+Access the interactive API documentation:
+```
+http://localhost:8000/api/schema/swagger-ui/
+```
+
+### OpenAPI Schema
+Download the OpenAPI schema:
+```
+http://localhost:8000/api/schema/
+```
+
 ## Endpoints
 
 ### Health Check
