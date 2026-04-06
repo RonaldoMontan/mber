@@ -1,20 +1,11 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import { getAccessToken, getRefreshToken, saveTokens, clearAll } from '../utils/storage';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-
 export interface ApiError {
   message: string;
   status: number;
   data?: any;
 }
-
-const axiosInstance: AxiosInstance = axios.create({
-  baseURL: BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
 
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -34,89 +25,99 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
-axiosInstance.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    const token = getAccessToken();
-    
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    
-    return config;
-  },
-  (error: AxiosError) => {
-    return Promise.reject(error);
-  }
-);
+const setupRequest = (): AxiosInstance => {
+  const instance = axios.create({
+    baseURL: import.meta.env.VITE_API_BASE_URL,
+  });
 
-axiosInstance.interceptors.response.use(
-  (response: AxiosResponse) => {
-    return response.data;
-  },
-  async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
-    
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then(token => {
-            if (originalRequest.headers) {
-              originalRequest.headers.Authorization = `Bearer ${token}`;
-            }
-            return axiosInstance(originalRequest);
-          })
-          .catch(err => {
-            return Promise.reject(err);
-          });
-      }
-
-      originalRequest._retry = true;
-      isRefreshing = true;
-
-      const refreshToken = getRefreshToken();
+  instance.interceptors.request.use(
+    (config: InternalAxiosRequestConfig) => {
+      const token = getAccessToken();
       
-      if (!refreshToken) {
-        clearAll();
-        window.location.href = '/login';
-        return Promise.reject(error);
+      if (token && config.headers) {
+        config.headers.Authorization = `Bearer ${token}`;
       }
-
-      try {
-        const response = await axios.post(`${BASE_URL}/api/auth/refresh/`, {
-          refresh: refreshToken,
-        });
-
-        const { access, refresh } = response.data;
-        saveTokens(access, refresh);
-        
-        if (originalRequest.headers) {
-          originalRequest.headers.Authorization = `Bearer ${access}`;
-        }
-        
-        processQueue(null, access);
-        isRefreshing = false;
-        
-        return axiosInstance(originalRequest);
-      } catch (refreshError) {
-        processQueue(refreshError, null);
-        isRefreshing = false;
-        clearAll();
-        window.location.href = '/login';
-        return Promise.reject(refreshError);
-      }
+      
+      return config;
+    },
+    (error: AxiosError) => {
+      return Promise.reject(error);
     }
+  );
 
-    const apiError: ApiError = {
-      message: (error.response?.data as any)?.message || error.message || 'An error occurred',
-      status: error.response?.status || 500,
-      data: error.response?.data,
-    };
+  instance.interceptors.response.use(
+    (response: AxiosResponse) => {
+      return response.data;
+    },
+    async (error: AxiosError) => {
+      const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+      
+      if (error.response?.status === 401 && !originalRequest._retry) {
+        if (isRefreshing) {
+          return new Promise((resolve, reject) => {
+            failedQueue.push({ resolve, reject });
+          })
+            .then(token => {
+              if (originalRequest.headers) {
+                originalRequest.headers.Authorization = `Bearer ${token}`;
+              }
+              return instance(originalRequest);
+            })
+            .catch(err => {
+              return Promise.reject(err);
+            });
+        }
 
-    return Promise.reject(apiError);
-  }
-);
+        originalRequest._retry = true;
+        isRefreshing = true;
+
+        const refreshToken = getRefreshToken();
+        
+        if (!refreshToken) {
+          clearAll();
+          window.location.href = '/login';
+          return Promise.reject(error);
+        }
+
+        try {
+          const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/auth/refresh/`, {
+            refresh: refreshToken,
+          });
+
+          const { access, refresh } = response.data;
+          saveTokens(access, refresh);
+          
+          if (originalRequest.headers) {
+            originalRequest.headers.Authorization = `Bearer ${access}`;
+          }
+          
+          processQueue(null, access);
+          isRefreshing = false;
+          
+          return instance(originalRequest);
+        } catch (refreshError) {
+          processQueue(refreshError, null);
+          isRefreshing = false;
+          clearAll();
+          window.location.href = '/login';
+          return Promise.reject(refreshError);
+        }
+      }
+
+      const apiError: ApiError = {
+        message: (error.response?.data as any)?.message || error.message || 'An error occurred',
+        status: error.response?.status || 500,
+        data: error.response?.data,
+      };
+
+      return Promise.reject(apiError);
+    }
+  );
+
+  return instance;
+};
+
+const axiosInstance = setupRequest();
 
 export const request = {
   get: <T = any>(url: string, config?: any): Promise<T> => 
