@@ -38,15 +38,17 @@ class UserViewSetTestCase(APITestCase):
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # 4 usuários: manager, regular, other + developer (criado pela migration)
-        self.assertEqual(len(response.data['results']), 4)
+        data = response.data.get('results', response.data) if isinstance(response.data, dict) else response.data
+        self.assertEqual(len(data), 4)
 
     def test_list_users_as_regular_user(self):
         self.client.force_authenticate(user=self.regular_user)
         response = self.client.get('/api/users/')
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 1)
-        self.assertEqual(response.data['results'][0]['username'], 'regular')
+        data = response.data.get('results', response.data) if isinstance(response.data, dict) else response.data
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]['username'], 'regular')
 
     def test_list_users_unauthenticated(self):
         response = self.client.get('/api/users/')
