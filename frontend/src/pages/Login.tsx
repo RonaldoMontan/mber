@@ -5,17 +5,14 @@ import logo from '../assets/Logo.png';
 function Login() {
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     navigate('/menu');
   };
 
   return (
-    // h-screen garante que ocupe a tela toda
     <div className="flex h-screen w-full bg-white">
       
-      {/* LADO ESQUERDO: A faixa vermelha que você pediu */}
-      {/* Usamos bg-[#B22222] direto para não depender do config se ele falhar */}
       <div className="hidden md:flex w-1/2 bg-[#B22222] items-center justify-center">
         <img 
           src={logo} 
@@ -24,7 +21,6 @@ function Login() {
         />
       </div>
 
-      {/* LADO DIREITO: O Formulário */}
       <div className="w-full md:w-1/2 flex items-center justify-center p-8">
         <form onSubmit={handleLogin} className="w-full max-w-md">
           <h1 className="text-3xl font-bold mb-2 text-gray-800">Boas vindas ao seu cardápio</h1>
@@ -48,10 +44,6 @@ function Login() {
             />
           </div>
 
-          {/* BOTÃO AMARELO: 
-              bg-[#FFC107] = Amarelo padrão
-              hover:bg-[#FFD54F] = Um tom acima (mais claro/brilhante)
-          */}
           <button 
             type="submit" 
             className="w-full bg-[#FFC107] hover:bg-[#FFD54F] text-black font-extrabold py-4 rounded-lg shadow-lg transform active:scale-95 transition-all uppercase tracking-widest"

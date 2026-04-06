@@ -1,17 +1,17 @@
-import React, { useEffect, useState } from 'react'; // <-- Faltava o { useState } aqui!
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 import logo from '../assets/Logo.png';
+import { Dish, DishesResponse } from '../types';
 
 const Home = () => {
-  const [dishes, setDishes] = useState([]); // Agora o useState vai funcionar
-  const [loading, setLoading] = useState(true);
+  const [dishes, setDishes] = useState<Dish[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    // Buscando os pratos do Django
-    axios.get('http://localhost:8000/api/dishes/')
+    axios.get<DishesResponse>('http://localhost:8000/api/dishes/')
       .then(res => {
         console.log("Dados que chegaram:", res.data);
-        setDishes(res.data.results || res.data);
+        setDishes(res.data.results || res.data as unknown as Dish[]);
         setLoading(false);
       })
       .catch(err => {
@@ -22,14 +22,12 @@ const Home = () => {
 
   if (loading) return <div className="flex h-screen items-center justify-center">Loading Menu...</div>;
 
-  // Filtramos os pratos do dia
   const dishOfTheDay = dishes.find(d => d.dishDay === true);
   const otherOptions = dishes.filter(d => d.dishDay === false && d.available === true);
 
   return (
     <div className="flex min-h-screen bg-gray-50 font-sans text-gray-800">
       
-      {/* SIDEBAR (Mantém o código anterior) */}
       <aside className="w-72 bg-[#B22222] text-white flex flex-col p-8 fixed h-full shadow-2xl">
         <img src={logo} alt="Logo" className="w-32 mx-auto mb-10" />
         <h2 className="text-2xl font-bold uppercase">Menu</h2>
@@ -37,7 +35,6 @@ const Home = () => {
 
       <main className="flex-1 ml-72 p-12 flex flex-col items-center">
         
-        {/* SÓ MOSTRA O PRATO DO DIA SE ELE EXISTIR NO BANCO */}
         {dishOfTheDay ? (
           <section className="w-full max-w-4xl mb-12 text-center">
             <h1 className="text-5xl font-black text-[#B22222] mb-8 uppercase italic">Dish of the Day</h1>
@@ -51,7 +48,6 @@ const Home = () => {
           <p className="text-gray-400 italic mb-8">No special dish selected for today.</p>
         )}
 
-        {/* LISTA AS OUTRAS OPÇÕES DISPONÍVEIS */}
         <section className="w-full max-w-4xl">
           <h2 className="text-4xl font-black text-[#B22222] mb-8 text-center uppercase italic">Other Options:</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
