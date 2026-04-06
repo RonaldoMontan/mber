@@ -161,9 +161,70 @@ SIMPLE_JWT = {
 # drf-spectacular settings
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Mber API',
-    'DESCRIPTION': 'API de gerenciamento de usuários com autenticação JWT',
+    'DESCRIPTION': '''API de gerenciamento de usuários e cardápio com autenticação JWT.
+    
+## Autenticação
+
+Esta API utiliza JWT (JSON Web Tokens) para autenticação. Para acessar endpoints protegidos:
+
+1. Faça login em `/api/auth/login/` com suas credenciais
+2. Utilize o `access` token retornado no header: `Authorization: Bearer <seu_token>`
+3. Quando o token expirar, renove-o usando `/api/auth/refresh/` com o `refresh` token
+
+## Sistema de Permissões
+
+A API possui três níveis de acesso baseados em grupos:
+
+- **Manager**: Acesso completo a todos os recursos (criar, ler, atualizar, deletar)
+- **Editor**: Pode criar e editar recursos, mas não pode deletar
+- **Viewer**: Apenas leitura de recursos
+
+## Credenciais de Desenvolvimento
+
+Para testes, utilize:
+- Username: `developer`
+- Password: `dev123`
+- Grupo: Manager
+''',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
     'COMPONENT_SPLIT_REQUEST': True,
     'SCHEMA_PATH_PREFIX': r'/api/',
+    'CONTACT': {
+        'name': 'Mber API Support',
+        'email': 'support@mber.com',
+    },
+    'LICENSE': {
+        'name': 'MIT License',
+    },
+    'TAGS': [
+        {'name': 'Autenticação', 'description': 'Endpoints para login, logout, registro e gerenciamento de tokens JWT'},
+        {'name': 'Usuários', 'description': 'Gerenciamento de usuários, perfis e permissões'},
+        {'name': 'Menu', 'description': 'Gerenciamento de itens do cardápio com preços e disponibilidade'},
+        {'name': 'Sistema', 'description': 'Endpoints de sistema e health check'},
+    ],
+    'SECURITY': [{'bearerAuth': []}],
+    'COMPONENTS': {
+        'securitySchemes': {
+            'bearerAuth': {
+                'type': 'http',
+                'scheme': 'bearer',
+                'bearerFormat': 'JWT',
+                'description': 'Token JWT obtido através do endpoint de login. Formato: Bearer <token>',
+            }
+        }
+    },
+    'SWAGGER_UI_SETTINGS': {
+        'deepLinking': True,
+        'persistAuthorization': True,
+        'displayOperationId': False,
+        'filter': True,
+    },
+    'PREPROCESSING_HOOKS': [],
+    'POSTPROCESSING_HOOKS': [],
+    'ENUM_NAME_OVERRIDES': {
+        'CategoryEnum': 'menu.models.MenuItem.CATEGORY_CHOICES',
+        'WeekdayEnum': 'menu.models.MenuItem.WEEKDAY_CHOICES',
+    },
+    'SCHEMA_COERCE_PATH_PK_SUFFIX': True,
 }
