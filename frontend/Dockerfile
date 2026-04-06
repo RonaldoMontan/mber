@@ -1,0 +1,18 @@
+FROM node:20-slim
+
+WORKDIR /app
+
+# Copia os arquivos de dependências para dentro do container
+COPY package*.json ./
+
+# Instala as dependências
+RUN npm install
+
+# Copia o resto do código para dentro do container
+COPY . .
+
+# Expõe a porta do Vite (padrão 5173)
+EXPOSE 5173
+
+# Comando para rodar em modo desenvolvimento
+CMD ["npm", "run", "dev", "--", "--host"]
