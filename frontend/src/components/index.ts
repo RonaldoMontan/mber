@@ -3,3 +3,7 @@ export { Input } from './Input';
 export { Card } from './Card';
 export { Loading } from './Loading';
 export { ErrorMessage } from './ErrorMessage';
+export { PrivateRoute } from './PrivateRoute';
+export { Modal } from './Modal';
+export { ConfirmDialog } from './ConfirmDialog';
+export { ResponsiveTable } from './ResponsiveTable';

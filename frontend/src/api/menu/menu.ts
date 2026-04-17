@@ -4,6 +4,7 @@ import type {
   MenuItemRequest,
   PatchedMenuItemRequest,
   MenuListParams,
+  CategoryDetail,
 } from './menu.types';
 
 export async function getMenuItems(params?: MenuListParams): Promise<MenuItem[]> {
@@ -31,6 +32,26 @@ export async function partialUpdateMenuItem(
 
 export async function deleteMenuItem(id: number): Promise<void> {
   await request.delete(`/api/menu/${id}/`);
+}
+
+export async function getCategories(): Promise<CategoryDetail[]> {
+  return await request.get<CategoryDetail[]>('/api/categories/');
+}
+
+export async function getCategory(id: number): Promise<CategoryDetail> {
+  return await request.get<CategoryDetail>(`/api/categories/${id}/`);
+}
+
+export async function createCategory(categoryData: Partial<CategoryDetail>): Promise<CategoryDetail> {
+  return await request.post<CategoryDetail>('/api/categories/', categoryData);
+}
+
+export async function updateCategory(id: number, categoryData: Partial<CategoryDetail>): Promise<CategoryDetail> {
+  return await request.put<CategoryDetail>(`/api/categories/${id}/`, categoryData);
+}
+
+export async function deleteCategory(id: number): Promise<void> {
+  await request.delete(`/api/categories/${id}/`);
 }
 
 export * from './menu.types';

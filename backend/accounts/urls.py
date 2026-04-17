@@ -7,7 +7,8 @@ from .views import (
     LoginView,
     LogoutView,
     CurrentUserView,
-    UserViewSet
+    UserViewSet,
+    user_stats
 )
 
 router = DefaultRouter()
@@ -19,5 +20,6 @@ urlpatterns = [
     path('auth/logout/', LogoutView.as_view(), name='logout'),
     path('auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('auth/me/', CurrentUserView.as_view(), name='current-user'),
+    path('dashboard/user-stats/', user_stats, name='user-stats'),
     path('', include(router.urls)),
 ]

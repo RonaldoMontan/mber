@@ -1,11 +1,12 @@
-from rest_framework import viewsets, status, generics
-from rest_framework.decorators import action
+from rest_framework import viewsets, status, generics, serializers
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import User, Group
 from django.contrib.auth import authenticate
-from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter, OpenApiExample
+from django.db.models import Count
+from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter, OpenApiExample, inline_serializer
 from drf_spectacular.types import OpenApiTypes
 
 from .serializers import (
@@ -487,3 +488,53 @@ class UserViewSet(viewsets.ModelViewSet):
             })
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@extend_schema(
+    tags=['Dashboard'],
+    summary='Estatísticas de Usuários',
+    description='Retorna estatísticas de usuários para o dashboard administrativo.',
+    responses=inline_serializer(
+        name='UserStatsResponse',
+        fields={
+            'total_users': serializers.IntegerField(),
+            'active_users': serializers.IntegerField(),
+            'inactive_users': serializers.IntegerField(),
+            'users_by_group': serializers.ListField(
+                child=inline_serializer(
+                    name='GroupStats',
+                    fields={
+                        'group': serializers.CharField(),
+                        'count': serializers.IntegerField(),
+                    }
+                )
+            ),
+        }
+    ),
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_stats(request):
+    """
+    Retorna estatísticas de usuários para o dashboard
+    """
+    total_users = User.objects.count()
+    active_users = User.objects.filter(is_active=True).count()
+    inactive_users = User.objects.filter(is_active=False).count()
+    
+    # Usuários por grupo
+    users_by_group = Group.objects.annotate(
+        count=Count('user')
+    ).values('name', 'count').order_by('-count')
+    
+    users_by_group_formatted = [
+        {'group': item['name'], 'count': item['count']}
+        for item in users_by_group
+    ]
+    
+    return Response({
+        'total_users': total_users,
+        'active_users': active_users,
+        'inactive_users': inactive_users,
+        'users_by_group': users_by_group_formatted,
+    })
