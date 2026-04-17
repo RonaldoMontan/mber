@@ -4,26 +4,150 @@ from django.core.exceptions import ValidationError
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from decimal import Decimal
-from .models import MenuItem
-from .serializers import MenuItemSerializer
+from .models import MenuItem, Category
+from .serializers import MenuItemSerializer, CategorySerializer
+
+
+class CategoryModelTestCase(TestCase):
+    def setUp(self):
+        self.category = Category.objects.create(
+            code='almoco',
+            name='Almoço',
+            is_active=True
+        )
+
+    def test_create_category(self):
+        self.assertEqual(self.category.code, 'almoco')
+        self.assertEqual(self.category.name, 'Almoço')
+        self.assertTrue(self.category.is_active)
+
+    def test_category_str_method(self):
+        self.assertEqual(str(self.category), 'Almoço')
+
+    def test_category_unique_code(self):
+        with self.assertRaises(Exception):
+            Category.objects.create(code='almoco', name='Almoço 2')
+
+    def test_category_ordering(self):
+        Category.objects.create(code='bebidas', name='Bebidas')
+        Category.objects.create(code='doces', name='Doces')
+        
+        categories = Category.objects.all()
+        self.assertEqual(categories[0].name, 'Almoço')
+        self.assertEqual(categories[1].name, 'Bebidas')
+        self.assertEqual(categories[2].name, 'Doces')
+
+
+class CategorySerializerTestCase(TestCase):
+    def test_serializer_with_valid_data(self):
+        data = {
+            'code': 'porcoes',
+            'name': 'Porções',
+            'is_active': True
+        }
+        serializer = CategorySerializer(data=data)
+        self.assertTrue(serializer.is_valid())
+        category = serializer.save()
+        self.assertEqual(category.code, 'porcoes')
+        self.assertEqual(category.name, 'Porções')
+
+    def test_serializer_read_only_fields(self):
+        category = Category.objects.create(code='doces', name='Doces')
+        serializer_data = CategorySerializer(category).data
+        
+        self.assertIn('id', serializer_data)
+        self.assertIn('created_at', serializer_data)
+        self.assertIn('updated_at', serializer_data)
+        self.assertIn('items_count', serializer_data)
+
+
+class CategoryViewSetTestCase(APITestCase):
+    def setUp(self):
+        self.client = APIClient()
+        
+        self.manager_group, _ = Group.objects.get_or_create(name='Manager')
+        self.editor_group, _ = Group.objects.get_or_create(name='Editor')
+        
+        self.manager_user = User.objects.create_user(
+            username='manager',
+            password='manager123'
+        )
+        self.manager_user.groups.add(self.manager_group)
+        
+        self.editor_user = User.objects.create_user(
+            username='editor',
+            password='editor123'
+        )
+        self.editor_user.groups.add(self.editor_group)
+        
+        self.category1 = Category.objects.create(code='almoco', name='Almoço')
+        self.category2 = Category.objects.create(code='bebidas', name='Bebidas', is_active=False)
+
+    def test_list_categories_unauthenticated(self):
+        response = self.client.get('/api/categories/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+
+    def test_list_categories_filter_active(self):
+        response = self.client.get('/api/categories/?is_active=true')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['code'], 'almoco')
+
+    def test_retrieve_category_by_code(self):
+        response = self.client.get(f'/api/categories/{self.category1.code}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['name'], 'Almoço')
+
+    def test_create_category_as_editor(self):
+        self.client.force_authenticate(user=self.editor_user)
+        data = {'code': 'doces', 'name': 'Doces', 'is_active': True}
+        response = self.client.post('/api/categories/', data)
+        
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Category.objects.filter(code='doces').exists())
+
+    def test_create_category_unauthenticated(self):
+        data = {'code': 'porcoes', 'name': 'Porções'}
+        response = self.client.post('/api/categories/', data)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_update_category_as_manager(self):
+        self.client.force_authenticate(user=self.manager_user)
+        data = {'code': 'almoco', 'name': 'Almoço Executivo', 'is_active': True}
+        response = self.client.put(f'/api/categories/{self.category1.code}/', data)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.category1.refresh_from_db()
+        self.assertEqual(self.category1.name, 'Almoço Executivo')
+
+    def test_delete_category_as_manager(self):
+        self.client.force_authenticate(user=self.manager_user)
+        response = self.client.delete(f'/api/categories/{self.category2.code}/')
+        
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Category.objects.filter(code='bebidas').exists())
 
 
 class MenuItemModelTestCase(TestCase):
     def setUp(self):
+        self.category_almoco = Category.objects.create(code='almoco', name='Almoço')
+        self.category_porcoes = Category.objects.create(code='porcoes', name='Porções')
+        
         self.valid_menu_item = MenuItem.objects.create(
             name='Feijoada',
             side_dish='Arroz, farofa, couve',
             image='https://example.com/feijoada.jpg',
-            category=MenuItem.MAIN_DISH,
             lunch_box_price_small=Decimal('15.00'),
             lunch_box_price_medium=Decimal('18.00'),
             lunch_box_price_large=Decimal('22.00'),
             is_active=True
         )
+        self.valid_menu_item.categories.add(self.category_almoco)
 
     def test_create_menu_item_with_lunch_box_prices(self):
         self.assertEqual(self.valid_menu_item.name, 'Feijoada')
-        self.assertEqual(self.valid_menu_item.category, MenuItem.MAIN_DISH)
+        self.assertIn(self.category_almoco, self.valid_menu_item.categories.all())
         self.assertEqual(self.valid_menu_item.lunch_box_price_small, Decimal('15.00'))
         self.assertTrue(self.valid_menu_item.is_active)
 
@@ -31,9 +155,9 @@ class MenuItemModelTestCase(TestCase):
         item = MenuItem.objects.create(
             name='Prato Executivo',
             side_dish='Arroz, feijão, salada',
-            category=MenuItem.OTHERS,
             daily_plate_price=Decimal('25.00')
         )
+        item.categories.add(self.category_porcoes)
         self.assertEqual(item.daily_plate_price, Decimal('25.00'))
         self.assertIsNone(item.lunch_box_price_small)
 
@@ -41,14 +165,12 @@ class MenuItemModelTestCase(TestCase):
         self.assertEqual(str(self.valid_menu_item), 'Feijoada')
 
     def test_menu_item_ordering(self):
-        MenuItem.objects.create(
+        bife = MenuItem.objects.create(
             name='Bife',
-            category=MenuItem.MAIN_DISH,
             daily_plate_price=Decimal('20.00')
         )
-        MenuItem.objects.create(
+        arroz = MenuItem.objects.create(
             name='Arroz',
-            category=MenuItem.OTHERS,
             daily_plate_price=Decimal('10.00')
         )
         
@@ -59,8 +181,7 @@ class MenuItemModelTestCase(TestCase):
 
     def test_menu_item_validation_no_prices(self):
         item = MenuItem(
-            name='Invalid Item',
-            category=MenuItem.MAIN_DISH
+            name='Invalid Item'
         )
         with self.assertRaises(ValidationError):
             item.full_clean()
@@ -70,7 +191,6 @@ class MenuItemModelTestCase(TestCase):
             name='Simple Item',
             daily_plate_price=Decimal('10.00')
         )
-        self.assertEqual(item.category, MenuItem.MAIN_DISH)
         self.assertTrue(item.is_active)
         self.assertEqual(item.side_dish, '')
         self.assertEqual(item.image, '')
@@ -79,7 +199,6 @@ class MenuItemModelTestCase(TestCase):
     def test_menu_item_with_weekdays(self):
         item = MenuItem.objects.create(
             name='Feijoada Especial',
-            category=MenuItem.MAIN_DISH,
             daily_plate_price=Decimal('30.00'),
             weekdays=['wednesday', 'saturday']
         )
@@ -88,7 +207,6 @@ class MenuItemModelTestCase(TestCase):
     def test_menu_item_is_available_on_weekday(self):
         item = MenuItem.objects.create(
             name='Feijoada',
-            category=MenuItem.MAIN_DISH,
             daily_plate_price=Decimal('25.00'),
             weekdays=['wednesday']
         )
@@ -98,7 +216,6 @@ class MenuItemModelTestCase(TestCase):
     def test_menu_item_available_every_day_when_no_weekdays(self):
         item = MenuItem.objects.create(
             name='Arroz',
-            category=MenuItem.OTHERS,
             daily_plate_price=Decimal('5.00')
         )
         self.assertTrue(item.is_available_on_weekday('monday'))
@@ -107,7 +224,6 @@ class MenuItemModelTestCase(TestCase):
     def test_menu_item_validation_invalid_weekday(self):
         item = MenuItem(
             name='Invalid Weekday Item',
-            category=MenuItem.MAIN_DISH,
             daily_plate_price=Decimal('10.00'),
             weekdays=['invalid_day']
         )
@@ -117,11 +233,12 @@ class MenuItemModelTestCase(TestCase):
 
 class MenuItemSerializerTestCase(TestCase):
     def setUp(self):
+        self.category = Category.objects.create(code='almoco', name='Almoço')
         self.valid_data = {
             'name': 'Lasanha',
             'side_dish': 'Salada',
             'image': 'https://example.com/lasanha.jpg',
-            'category': MenuItem.MAIN_DISH,
+            'category_codes': ['almoco'],
             'lunch_box_price_small': '12.00',
             'lunch_box_price_medium': '15.00',
             'lunch_box_price_large': '18.00',
@@ -138,7 +255,6 @@ class MenuItemSerializerTestCase(TestCase):
     def test_serializer_with_daily_plate_price_only(self):
         data = {
             'name': 'Prato do Dia',
-            'category': MenuItem.OTHERS,
             'daily_plate_price': '20.00',
             'is_active': True
         }
@@ -148,7 +264,6 @@ class MenuItemSerializerTestCase(TestCase):
     def test_serializer_validation_no_prices(self):
         data = {
             'name': 'Invalid Item',
-            'category': MenuItem.MAIN_DISH,
             'is_active': True
         }
         serializer = MenuItemSerializer(data=data)
@@ -168,7 +283,6 @@ class MenuItemSerializerTestCase(TestCase):
     def test_serializer_with_weekdays(self):
         data = {
             'name': 'Feijoada',
-            'category': MenuItem.MAIN_DISH,
             'daily_plate_price': '25.00',
             'weekdays': ['wednesday', 'saturday'],
             'is_active': True
@@ -181,7 +295,6 @@ class MenuItemSerializerTestCase(TestCase):
     def test_serializer_with_invalid_weekday(self):
         data = {
             'name': 'Invalid Item',
-            'category': MenuItem.MAIN_DISH,
             'daily_plate_price': '20.00',
             'weekdays': ['invalid_day'],
             'is_active': True
@@ -193,7 +306,6 @@ class MenuItemSerializerTestCase(TestCase):
     def test_serializer_with_empty_weekdays(self):
         data = {
             'name': 'Every Day Item',
-            'category': MenuItem.MAIN_DISH,
             'daily_plate_price': '15.00',
             'weekdays': [],
             'is_active': True
@@ -233,23 +345,26 @@ class MenuItemViewSetTestCase(APITestCase):
         )
         self.viewer_user.groups.add(self.viewer_group)
         
+        self.category_almoco = Category.objects.create(code='almoco', name='Almoço')
+        self.category_porcoes = Category.objects.create(code='porcoes', name='Porções')
+        
         self.menu_item1 = MenuItem.objects.create(
             name='Feijoada',
             side_dish='Arroz, farofa, couve',
-            category=MenuItem.MAIN_DISH,
             lunch_box_price_small=Decimal('15.00'),
             lunch_box_price_medium=Decimal('18.00'),
             lunch_box_price_large=Decimal('22.00'),
             is_active=True
         )
+        self.menu_item1.categories.add(self.category_almoco)
         
         self.menu_item2 = MenuItem.objects.create(
             name='Salada',
             side_dish='Alface, tomate',
-            category=MenuItem.OTHERS,
             daily_plate_price=Decimal('10.00'),
             is_active=False
         )
+        self.menu_item2.categories.add(self.category_porcoes)
 
     def test_list_menu_items_as_viewer(self):
         self.client.force_authenticate(user=self.viewer_user)
@@ -280,16 +395,6 @@ class MenuItemViewSetTestCase(APITestCase):
         response = self.client.get('/api/menu/')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_filter_menu_items_by_category(self):
-        self.client.force_authenticate(user=self.editor_user)
-        response = self.client.get('/api/menu/?category=main_dish')
-        
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = response.data.get('results', response.data) if isinstance(response.data, dict) else response.data
-        # Verifica que retorna apenas itens da categoria main_dish
-        self.assertGreater(len(data), 0)
-        for item in data:
-            self.assertEqual(item['category'], 'main_dish')
 
     def test_filter_menu_items_by_is_active(self):
         self.client.force_authenticate(user=self.editor_user)
@@ -318,13 +423,13 @@ class MenuItemViewSetTestCase(APITestCase):
         data = {
             'name': 'Strogonoff',
             'side_dish': 'Arroz, batata palha',
-            'category': MenuItem.MAIN_DISH,
+            'category_codes': ['almoco'],
             'lunch_box_price_small': '16.00',
             'lunch_box_price_medium': '20.00',
             'lunch_box_price_large': '24.00',
             'is_active': True
         }
-        response = self.client.post('/api/menu/', data)
+        response = self.client.post('/api/menu/', data, format='json')
         
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['name'], 'Strogonoff')
@@ -334,11 +439,10 @@ class MenuItemViewSetTestCase(APITestCase):
         self.client.force_authenticate(user=self.viewer_user)
         data = {
             'name': 'Test Item',
-            'category': MenuItem.MAIN_DISH,
             'daily_plate_price': '15.00',
             'is_active': True
         }
-        response = self.client.post('/api/menu/', data)
+        response = self.client.post('/api/menu/', data, format='json')
         
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -346,10 +450,9 @@ class MenuItemViewSetTestCase(APITestCase):
         self.client.force_authenticate(user=self.editor_user)
         data = {
             'name': 'Invalid Item',
-            'category': MenuItem.MAIN_DISH,
             'is_active': True
         }
-        response = self.client.post('/api/menu/', data)
+        response = self.client.post('/api/menu/', data, format='json')
         
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -365,13 +468,13 @@ class MenuItemViewSetTestCase(APITestCase):
         data = {
             'name': 'Feijoada Completa',
             'side_dish': 'Arroz, farofa, couve, laranja',
-            'category': MenuItem.MAIN_DISH,
+            'category_codes': ['almoco', 'porcoes'],
             'lunch_box_price_small': '16.00',
             'lunch_box_price_medium': '19.00',
             'lunch_box_price_large': '23.00',
             'is_active': True
         }
-        response = self.client.put(f'/api/menu/{self.menu_item1.id}/', data)
+        response = self.client.put(f'/api/menu/{self.menu_item1.id}/', data, format='json')
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['name'], 'Feijoada Completa')
@@ -414,7 +517,7 @@ class MenuItemViewSetTestCase(APITestCase):
         data = {
             'name': 'Feijoada Especial',
             'side_dish': 'Arroz, farofa, couve, laranja',
-            'category': MenuItem.MAIN_DISH,
+            'category_codes': ['almoco'],
             'daily_plate_price': '30.00',
             'weekdays': ['wednesday', 'saturday'],
             'is_active': True
@@ -428,7 +531,6 @@ class MenuItemViewSetTestCase(APITestCase):
         self.client.force_authenticate(user=self.editor_user)
         data = {
             'name': 'Invalid Item',
-            'category': MenuItem.MAIN_DISH,
             'daily_plate_price': '20.00',
             'weekdays': ['invalid_day'],
             'is_active': True

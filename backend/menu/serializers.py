@@ -1,5 +1,25 @@
 from rest_framework import serializers
-from .models import MenuItem
+from .models import MenuItem, Category
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    items_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Category
+        fields = [
+            'id',
+            'code',
+            'name',
+            'is_active',
+            'items_count',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+    
+    def get_items_count(self, obj):
+        return obj.items.filter(is_active=True).count()
 
 
 class MenuItemSerializer(serializers.ModelSerializer):
@@ -9,6 +29,14 @@ class MenuItemSerializer(serializers.ModelSerializer):
     Valida que pelo menos um preço seja fornecido e que os dias da semana sejam válidos.
     Campos read-only: id, created_at, updated_at
     """
+    categories_detail = CategorySerializer(source='categories', many=True, read_only=True)
+    category_codes = serializers.ListField(
+        child=serializers.CharField(),
+        write_only=True,
+        required=False,
+        help_text='Lista de códigos de categorias'
+    )
+    
     class Meta:
         model = MenuItem
         fields = [
@@ -16,7 +44,8 @@ class MenuItemSerializer(serializers.ModelSerializer):
             'name',
             'side_dish',
             'image',
-            'category',
+            'categories_detail',
+            'category_codes',
             'lunch_box_price_small',
             'lunch_box_price_medium',
             'lunch_box_price_large',
@@ -98,3 +127,26 @@ class MenuItemSerializer(serializers.ModelSerializer):
                     })
         
         return data
+    
+    def create(self, validated_data):
+        category_codes = validated_data.pop('category_codes', [])
+        item = MenuItem.objects.create(**validated_data)
+        
+        if category_codes:
+            categories = Category.objects.filter(code__in=category_codes)
+            item.categories.set(categories)
+        
+        return item
+    
+    def update(self, instance, validated_data):
+        category_codes = validated_data.pop('category_codes', None)
+        
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        
+        if category_codes is not None:
+            categories = Category.objects.filter(code__in=category_codes)
+            instance.categories.set(categories)
+        
+        return instance

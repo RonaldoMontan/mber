@@ -1,16 +1,31 @@
 # backend/menu/models.py
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.utils.text import slugify
+
+
+class Category(models.Model):
+    code = models.CharField(
+        max_length=50,
+        unique=True,
+        verbose_name='Código',
+        help_text='Código único da categoria (ex: almoco, porcoes, bebidas)'
+    )
+    name = models.CharField(max_length=100, verbose_name='Nome')
+    is_active = models.BooleanField(default=True, verbose_name='Ativo')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Criado em')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Atualizado em')
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'Categoria'
+        verbose_name_plural = 'Categorias'
+
+    def __str__(self):
+        return self.name
 
 
 class MenuItem(models.Model):
-    MAIN_DISH = 'main_dish'
-    OTHERS = 'others'
-    
-    CATEGORY_CHOICES = [
-        (MAIN_DISH, 'Main Dish'),
-        (OTHERS, 'Others'),
-    ]
     
     MONDAY = 'monday'
     TUESDAY = 'tuesday'
@@ -33,11 +48,11 @@ class MenuItem(models.Model):
     name = models.CharField(max_length=200, verbose_name='Name')
     side_dish = models.TextField(verbose_name='Side Dish', blank=True)
     image = models.URLField(max_length=500, verbose_name='Image URL', blank=True)
-    category = models.CharField(
-        max_length=20,
-        choices=CATEGORY_CHOICES,
-        default=MAIN_DISH,
-        verbose_name='Category'
+    categories = models.ManyToManyField(
+        Category,
+        related_name='items',
+        verbose_name='Categorias',
+        help_text='Categorias às quais este item pertence'
     )
     
     lunch_box_price_small = models.DecimalField(

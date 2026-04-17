@@ -30,12 +30,21 @@ export enum Weekday {
   Sunday = 'sunday',
 }
 
+export interface CategoryDetail {
+  id: number;
+  code: string;
+  name: string;
+  is_active: boolean;
+  items_count: number;
+}
+
 export interface MenuItem {
   id: number;
   name: string;
   side_dish?: string;
   image?: string;
   category?: MenuCategory;
+  categories_detail?: CategoryDetail[];
   lunch_box_price_small?: string;
   lunch_box_price_medium?: string;
   lunch_box_price_large?: string;

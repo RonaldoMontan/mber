@@ -75,7 +75,6 @@ const setupRequest = (): AxiosInstance => {
         
         if (!refreshToken) {
           clearAll();
-          window.location.href = '/login';
           return Promise.reject(error);
         }
 
@@ -99,7 +98,6 @@ const setupRequest = (): AxiosInstance => {
           processQueue(refreshError, null);
           isRefreshing = false;
           clearAll();
-          window.location.href = '/login';
           return Promise.reject(refreshError);
         }
       }
