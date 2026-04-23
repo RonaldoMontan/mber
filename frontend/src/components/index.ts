@@ -7,3 +7,4 @@ export { PrivateRoute } from './PrivateRoute';
 export { Modal } from './Modal';
 export { ConfirmDialog } from './ConfirmDialog';
 export { ResponsiveTable } from './ResponsiveTable';
+export { AppErrorBoundary } from './AppErrorBoundary';

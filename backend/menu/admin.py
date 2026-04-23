@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import MenuItem, Category
+from .models import MenuItem, Category, MenuItemSchedule
 
 
 @admin.register(Category)
@@ -78,3 +78,11 @@ class MenuItemAdmin(admin.ModelAdmin):
             return 'Every day'
         return ', '.join([day.capitalize() for day in obj.weekdays])
     display_weekdays.short_description = 'Available Days'
+
+
+@admin.register(MenuItemSchedule)
+class MenuItemScheduleAdmin(admin.ModelAdmin):
+    list_display = ['date', 'item', 'daily_price', 'is_open', 'note']
+    list_filter = ['is_open', 'date']
+    search_fields = ['item__name', 'note']
+    ordering = ['date']

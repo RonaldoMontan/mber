@@ -9,6 +9,7 @@ interface SidebarProps {
 export const Sidebar = ({ selectedCategory, onCategorySelect }: SidebarProps) => {
   const { categories, loading } = useCategories();
   const [showContactModal, setShowContactModal] = useState(false);
+  const visibleCategories = categories.filter((category) => category.code !== 'prato-do-dia');
 
   return (
     <>
@@ -26,7 +27,7 @@ export const Sidebar = ({ selectedCategory, onCategorySelect }: SidebarProps) =>
 
         {/* Navigation */}
         <nav className="flex-1 px-6 py-8">
-          {/* Home Button */}
+          {/* Main Menu Button */}
           <button
             onClick={() => onCategorySelect(null)}
             className={`w-full text-left px-6 py-4 rounded-xl mb-6 font-bold text-lg uppercase tracking-wide transition-all duration-300 ${
@@ -39,7 +40,7 @@ export const Sidebar = ({ selectedCategory, onCategorySelect }: SidebarProps) =>
               <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
               </svg>
-              <span>Início</span>
+              <span>Cardápio</span>
             </div>
           </button>
 
@@ -51,9 +52,9 @@ export const Sidebar = ({ selectedCategory, onCategorySelect }: SidebarProps) =>
                 <div className="w-4 h-4 border-2 border-white/60 border-t-transparent rounded-full animate-spin"></div>
                 <span className="text-sm">Carregando...</span>
               </div>
-            ) : categories && categories.length > 0 ? (
+            ) : visibleCategories.length > 0 ? (
               <div className="space-y-2">
-                {categories.map((category) => (
+                {visibleCategories.map((category) => (
                   <button
                     key={category.code}
                     onClick={() => onCategorySelect(category.code)}
@@ -143,10 +144,10 @@ export const Sidebar = ({ selectedCategory, onCategorySelect }: SidebarProps) =>
             <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
               <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
             </svg>
-            <span className="text-xs font-semibold">Início</span>
+            <span className="text-xs font-semibold">Cardápio</span>
           </button>
 
-          {!loading && categories && categories.map((category) => (
+          {!loading && visibleCategories.map((category) => (
             <button
               key={category.code}
               onClick={() => onCategorySelect(category.code)}

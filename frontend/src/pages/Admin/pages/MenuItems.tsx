@@ -4,16 +4,6 @@ import { Modal, Button, Input, ConfirmDialog } from '../../../components';
 import { menu } from '../../../api';
 import type { MenuItem, CategoryDetail } from '../../../api/menu/menu.types';
 
-const WEEKDAYS = [
-  { value: 'monday', label: 'Segunda' },
-  { value: 'tuesday', label: 'Terça' },
-  { value: 'wednesday', label: 'Quarta' },
-  { value: 'thursday', label: 'Quinta' },
-  { value: 'friday', label: 'Sexta' },
-  { value: 'saturday', label: 'Sábado' },
-  { value: 'sunday', label: 'Domingo' },
-];
-
 interface FormData {
   name: string;
   side_dish: string;
@@ -23,7 +13,6 @@ interface FormData {
   lunch_box_price_medium: string;
   lunch_box_price_large: string;
   daily_plate_price: string;
-  weekdays: string[];
   is_active: boolean;
 }
 
@@ -42,7 +31,6 @@ const MenuItems = () => {
     lunch_box_price_medium: '',
     lunch_box_price_large: '',
     daily_plate_price: '',
-    weekdays: [],
     is_active: true,
   });
   const [error, setError] = useState('');
@@ -80,7 +68,6 @@ const MenuItems = () => {
         lunch_box_price_medium: item.lunch_box_price_medium || '',
         lunch_box_price_large: item.lunch_box_price_large || '',
         daily_plate_price: item.daily_plate_price || '',
-        weekdays: item.weekdays || [],
         is_active: item.is_active ?? true,
       });
     } else {
@@ -94,7 +81,6 @@ const MenuItems = () => {
         lunch_box_price_medium: '',
         lunch_box_price_large: '',
         daily_plate_price: '',
-        weekdays: [],
         is_active: true,
       });
     }
@@ -112,11 +98,22 @@ const MenuItems = () => {
     e.preventDefault();
     setError('');
 
-    const hasPrice = formData.lunch_box_price_small || formData.lunch_box_price_medium || 
-                     formData.lunch_box_price_large || formData.daily_plate_price;
-    
-    if (!hasPrice) {
-      setError('Pelo menos um preço deve ser informado');
+    const isBeverage = formData.category_codes.includes('bebidas');
+    const hasAnyPrice = formData.lunch_box_price_small || formData.lunch_box_price_medium ||
+      formData.lunch_box_price_large || formData.daily_plate_price;
+
+    if (!hasAnyPrice) {
+      setError('Informe pelo menos um preco');
+      return;
+    }
+
+    if (isBeverage && !formData.daily_plate_price) {
+      setError('Para bebida, informe o preco unitario');
+      return;
+    }
+
+    if (formData.category_codes.includes('prato-do-dia') && !formData.daily_plate_price) {
+      setError('Para item marcado como prato do dia, informe o preco de prato do dia');
       return;
     }
 
@@ -157,15 +154,6 @@ const MenuItems = () => {
     }
   };
 
-  const toggleWeekday = (weekday: string) => {
-    setFormData(prev => ({
-      ...prev,
-      weekdays: prev.weekdays.includes(weekday)
-        ? prev.weekdays.filter(w => w !== weekday)
-        : [...prev.weekdays, weekday],
-    }));
-  };
-
   const toggleCategory = (code: string) => {
     setFormData(prev => ({
       ...prev,
@@ -174,6 +162,28 @@ const MenuItems = () => {
         : [...prev.category_codes, code],
     }));
   };
+
+  const setDailyDishCategory = (checked: boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      category_codes: checked
+        ? Array.from(new Set([...prev.category_codes, 'prato-do-dia']))
+        : prev.category_codes.filter((code) => code !== 'prato-do-dia'),
+    }));
+  };
+
+  const setBeverageCategory = (checked: boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      category_codes: checked
+        ? Array.from(new Set([...prev.category_codes, 'bebidas']))
+        : prev.category_codes.filter((code) => code !== 'bebidas'),
+    }));
+  };
+
+  const isDailyDish = formData.category_codes.includes('prato-do-dia');
+  const isBeverage = formData.category_codes.includes('bebidas');
+  const extraCategories = categories.filter((cat) => !['prato-do-dia', 'bebidas'].includes(cat.code));
 
   return (
     <div>
@@ -188,7 +198,7 @@ const MenuItems = () => {
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
-            <span className="hidden sm:inline">Adicionar Prato</span>
+            <span className="hidden sm:inline">Adicionar Item</span>
             <span className="sm:hidden">Adicionar</span>
           </button>
         }
@@ -438,7 +448,7 @@ const MenuItems = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="md:col-span-2">
               <Input
-                label="Nome do Prato *"
+                label="Nome do Item *"
                 placeholder="Ex: Feijoada Completa"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -469,77 +479,73 @@ const MenuItems = () => {
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Categorias
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {categories.map(cat => (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => toggleCategory(cat.code)}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      formData.category_codes.includes(cat.code)
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {cat.name}
-                  </button>
-                ))}
+              <div className="grid gap-3 md:grid-cols-2">
+                <label className="rounded-lg border border-sky-200 bg-sky-50 p-3 flex items-center gap-3 text-sm font-semibold text-sky-900">
+                  <input
+                    type="checkbox"
+                    checked={isBeverage}
+                    onChange={(event) => setBeverageCategory(event.target.checked)}
+                    className="h-4 w-4 rounded border-sky-300 text-sky-600 focus:ring-sky-500"
+                  />
+                  Este item e uma bebida
+                </label>
+
+                <label className="rounded-lg border border-amber-200 bg-amber-50 p-3 flex items-center gap-3 text-sm font-semibold text-amber-900">
+                  <input
+                    type="checkbox"
+                    checked={isDailyDish}
+                    onChange={(event) => setDailyDishCategory(event.target.checked)}
+                    className="h-4 w-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
+                  />
+                  Marcar este item como Prato do Dia
+                </label>
               </div>
-            </div>
+
+              <p className="mt-2 text-xs text-gray-600">
+                Bebida usa apenas preco unitario. Prato do dia entra na agenda semanal.
+              </p>
+
+              {extraCategories.length > 0 && (
+                <>
+                  <label className="block mt-4 text-sm font-medium text-gray-700 mb-2">
+                    Outras categorias (opcional)
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {extraCategories.map(cat => (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => toggleCategory(cat.code)}
+                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          formData.category_codes.includes(cat.code)
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {cat.name}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+              </div>
+
 
             <div className="md:col-span-2 border-t pt-4">
-              <h3 className="text-base font-semibold text-gray-900 mb-4">💰 Preços</h3>
-              <p className="text-sm text-gray-600 mb-4">Preencha pelo menos um tipo de preço</p>
+              <h3 className="text-base font-semibold text-gray-900 mb-4">Precos</h3>
+              <p className="text-sm text-gray-600 mb-4">Cadastro de preco de forma simples</p>
               
               <div className="space-y-6">
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                  <h4 className="text-sm font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                    </svg>
-                    Marmitas (Lunch Box)
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Input
-                      label="Pequena"
-                      type="number"
-                      step="0.01"
-                      placeholder="R$ 0,00"
-                      value={formData.lunch_box_price_small}
-                      onChange={(e) => setFormData({ ...formData, lunch_box_price_small: e.target.value })}
-                    />
-                    <Input
-                      label="Média"
-                      type="number"
-                      step="0.01"
-                      placeholder="R$ 0,00"
-                      value={formData.lunch_box_price_medium}
-                      onChange={(e) => setFormData({ ...formData, lunch_box_price_medium: e.target.value })}
-                    />
-                    <Input
-                      label="Grande"
-                      type="number"
-                      step="0.01"
-                      placeholder="R$ 0,00"
-                      value={formData.lunch_box_price_large}
-                      onChange={(e) => setFormData({ ...formData, lunch_box_price_large: e.target.value })}
-                    />
-                  </div>
-                </div>
-
                 <div className="bg-green-50 p-4 rounded-lg border border-green-200">
                   <h4 className="text-sm font-semibold text-green-900 mb-3 flex items-center gap-2">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    Prato do Dia
+                    {isBeverage ? 'Preco da Bebida' : 'Valor Base do Item'}
                   </h4>
                   <div className="max-w-xs">
                     <Input
-                      label="Preço"
+                      label={isBeverage ? 'Preco da bebida' : 'Valor base'}
                       type="number"
                       step="0.01"
                       placeholder="R$ 0,00"
@@ -547,29 +553,49 @@ const MenuItems = () => {
                       onChange={(e) => setFormData({ ...formData, daily_plate_price: e.target.value })}
                     />
                   </div>
+                  {!isBeverage && (
+                    <p className="mt-2 text-xs text-green-800">
+                      O valor promocional do prato do dia pode ser definido na Agenda.
+                    </p>
+                  )}
                 </div>
-              </div>
-            </div>
 
-            <div className="md:col-span-2 border-t pt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Dias Disponíveis (vazio = todos os dias)
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {WEEKDAYS.map(day => (
-                  <button
-                    key={day.value}
-                    type="button"
-                    onClick={() => toggleWeekday(day.value)}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      formData.weekdays.includes(day.value)
-                        ? 'bg-red-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {day.label}
-                  </button>
-                ))}
+                {!isBeverage && (
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <h4 className="text-sm font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                      </svg>
+                      Precos de Marmita (opcional)
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Input
+                        label="Pequena"
+                        type="number"
+                        step="0.01"
+                        placeholder="R$ 0,00"
+                        value={formData.lunch_box_price_small}
+                        onChange={(e) => setFormData({ ...formData, lunch_box_price_small: e.target.value })}
+                      />
+                      <Input
+                        label="Media"
+                        type="number"
+                        step="0.01"
+                        placeholder="R$ 0,00"
+                        value={formData.lunch_box_price_medium}
+                        onChange={(e) => setFormData({ ...formData, lunch_box_price_medium: e.target.value })}
+                      />
+                      <Input
+                        label="Grande"
+                        type="number"
+                        step="0.01"
+                        placeholder="R$ 0,00"
+                        value={formData.lunch_box_price_large}
+                        onChange={(e) => setFormData({ ...formData, lunch_box_price_large: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

@@ -126,3 +126,35 @@ class MenuItem(models.Model):
         if not self.weekdays:
             return True
         return weekday.lower() in self.weekdays
+
+
+class MenuItemSchedule(models.Model):
+    date = models.DateField(unique=True, verbose_name='Date')
+    item = models.ForeignKey(
+        MenuItem,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='schedules',
+        verbose_name='Menu Item'
+    )
+    is_open = models.BooleanField(default=True, verbose_name='Is Open')
+    daily_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name='Daily Price Override'
+    )
+    note = models.CharField(max_length=255, blank=True, verbose_name='Note')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created At')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Updated At')
+
+    class Meta:
+        ordering = ['date']
+        verbose_name = 'Menu Item Schedule'
+        verbose_name_plural = 'Menu Item Schedules'
+
+    def __str__(self):
+        item_name = self.item.name if self.item else 'Sem item'
+        return f'{self.date} - {item_name}'

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import MenuItem, Category
+from .models import MenuItem, Category, MenuItemSchedule
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -67,9 +67,6 @@ class MenuItemSerializer(serializers.ModelSerializer):
             'image': {
                 'help_text': 'URL da imagem do prato',
                 'required': False,
-            },
-            'category': {
-                'help_text': 'Categoria do item: main_dish (prato principal) ou others (outros)'
             },
             'lunch_box_price_small': {
                 'help_text': 'Preço da marmita tamanho pequeno. Pelo menos um preço deve ser fornecido',
@@ -150,3 +147,43 @@ class MenuItemSerializer(serializers.ModelSerializer):
             instance.categories.set(categories)
         
         return instance
+
+
+class MenuItemScheduleSerializer(serializers.ModelSerializer):
+    item = MenuItemSerializer(read_only=True)
+    item_id = serializers.PrimaryKeyRelatedField(
+        source='item',
+        queryset=MenuItem.objects.filter(
+            is_active=True,
+            categories__code='prato-do-dia',
+        ).distinct(),
+        required=False,
+        allow_null=True,
+        write_only=True,
+    )
+
+    class Meta:
+        model = MenuItemSchedule
+        fields = ['id', 'date', 'item', 'item_id', 'is_open', 'daily_price', 'note', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def validate(self, attrs):
+        is_open = attrs.get('is_open', getattr(self.instance, 'is_open', True))
+        item = attrs.get('item', getattr(self.instance, 'item', None))
+
+        if is_open and item is None:
+            raise serializers.ValidationError({
+                'item_id': 'Selecione um prato para dias marcados como abertos.'
+            })
+
+        if item and not item.categories.filter(code='prato-do-dia').exists():
+            raise serializers.ValidationError({
+                'item_id': 'Somente itens marcados como prato do dia podem ser agendados.'
+            })
+
+        if item and not item.is_active:
+            raise serializers.ValidationError({
+                'item_id': 'Somente itens ativos podem ser agendados.'
+            })
+
+        return attrs

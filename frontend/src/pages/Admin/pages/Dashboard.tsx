@@ -154,6 +154,16 @@ const Dashboard = () => {
             <span className="text-sm font-medium text-gray-900">Nova Categoria</span>
           </a>
 
+          <a
+            href="/admin/schedule"
+            className="flex items-center gap-3 p-4 rounded-lg border border-gray-200 hover:border-amber-300 hover:bg-amber-50 transition-colors"
+          >
+            <svg className="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span className="text-sm font-medium text-gray-900">Programar Agenda</span>
+          </a>
+
           {user?.groups?.includes('Manager') && (
             <a
               href="/admin/users"

@@ -12,7 +12,12 @@ export const useMenuItems = () => {
       setLoading(true);
       setError(null);
       const data = await menu.getMenuItems({ ordering: 'name' });
-      setItems(data.filter(item => item.is_active));
+      const normalized = Array.isArray(data)
+        ? data
+        : Array.isArray((data as any)?.results)
+          ? (data as any).results
+          : [];
+      setItems(normalized.filter((item: MenuItem) => item.is_active));
     } catch (err: any) {
       console.error('Erro ao buscar itens do menu:', err);
       setError(err.message || 'Erro ao carregar menu');
