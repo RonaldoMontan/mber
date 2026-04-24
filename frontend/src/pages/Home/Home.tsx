@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMenuItems } from '../../hooks/useMenuItems';
 import { useCategories } from '../../hooks/useCategories';
 import { schedule } from '../../api';
@@ -49,21 +49,17 @@ const Home = () => {
     return item.weekdays.includes(currentWeekday as any);
   });
 
-  const menuItems = useMemo(() => {
-    let filtered = availableToday.filter((item) => {
-      if (dailyDish?.id && item.id === dailyDish.id) {
-        return false;
-      }
+  const menuItems = availableToday.filter((item) => {
+    if (dailyDish?.id && item.id === dailyDish.id) {
+      return false;
+    }
 
-      if (!selectedCategory) {
-        return true;
-      }
+    if (!selectedCategory) {
+      return true;
+    }
 
-      return item.categories_detail?.some((cat: CategoryDetail) => cat.code === selectedCategory);
-    });
-
-    return filtered;
-  }, [availableToday, selectedCategory, dailyDish]);
+    return item.categories_detail?.some((cat: CategoryDetail) => cat.code === selectedCategory);
+  });
 
   return (
     <div className="flex min-h-screen bg-gray-50 font-sans text-gray-800">
