@@ -458,10 +458,10 @@ const MenuItems = () => {
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Acompanhamentos
+                {isBeverage ? 'Obs' : 'Acompanhamentos'}
               </label>
               <textarea
-                placeholder="Ex: Arroz, feijão, farofa, couve, laranja"
+                placeholder={isBeverage ? 'Ex: Sem gelo, zero acucar, lata 350ml' : 'Ex: Arroz, feijao, farofa, couve, laranja'}
                 value={formData.side_dish}
                 onChange={(e) => setFormData({ ...formData, side_dish: e.target.value })}
                 rows={3}
