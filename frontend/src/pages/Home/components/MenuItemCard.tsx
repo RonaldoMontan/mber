@@ -7,6 +7,8 @@ interface MenuItemCardProps {
 
 export const MenuItemCard = ({ item, variant = 'default' }: MenuItemCardProps) => {
   const hasImage = item.image && item.image.trim() !== '';
+  const isBeverage = item.categories_detail?.some((category) => category.code === 'bebidas') ?? false;
+  const detailLabel = isBeverage ? 'Obs:' : 'Acompanhamentos:';
   
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
@@ -36,13 +38,13 @@ export const MenuItemCard = ({ item, variant = 'default' }: MenuItemCardProps) =
         {/* Nome (se tiver imagem, já está na imagem) */}
         {!hasImage && item.side_dish && (
           <p className="text-gray-600 text-base mb-4 leading-relaxed">
-            {item.side_dish}
+            <span className="font-semibold text-[#B22222]">{detailLabel}</span> {item.side_dish}
           </p>
         )}
         
         {hasImage && item.side_dish && (
           <p className="text-gray-600 text-base mb-4 leading-relaxed">
-            <span className="font-semibold text-[#B22222]">Acompanhamentos:</span> {item.side_dish}
+            <span className="font-semibold text-[#B22222]">{detailLabel}</span> {item.side_dish}
           </p>
         )}
 
