@@ -78,12 +78,6 @@ const Home = () => {
       />
 
       <main className="flex-1 md:ml-80 pt-20 md:pt-12 pb-24 md:pb-12 px-4 md:px-12 flex flex-col items-center">
-        {import.meta.env.DEV && (
-          <div className="w-full max-w-4xl mb-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-xs text-blue-800">
-            debug: itens={items.length} | disponiveisHoje={availableToday.length} | menuExibido={menuItems.length} | pratoDia={dailyDish?.name || 'nenhum'} | pratos={mainMenuItems.length} | bebidas={drinksMenuItems.length}
-          </div>
-        )}
-
         {scheduleError && (
           <div className="w-full max-w-4xl mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {scheduleError}
