@@ -1,5 +1,6 @@
 import { useCategories } from '../../../hooks/useCategories';
 import { useState } from 'react';
+import { ContactInfo } from '../../../enums/contact';
 
 interface SidebarProps {
   selectedCategory: string | null;
@@ -91,7 +92,7 @@ export const Sidebar = ({ selectedCategory, onCategorySelect }: SidebarProps) =>
             </div>
             <div>
               <p className="text-sm font-bold mb-1">Delivery</p>
-              <p className="text-xs text-white/90">(19) 98860-6368</p>
+              <p className="text-xs text-white/90">{ContactInfo.PHONE}</p>
             </div>
           </div>
 
@@ -103,7 +104,7 @@ export const Sidebar = ({ selectedCategory, onCategorySelect }: SidebarProps) =>
             </div>
             <div>
               <p className="text-sm font-bold mb-1">Endereço</p>
-              <p className="text-xs text-white/90 leading-relaxed">R. XXXXXXXXX XXXXXX, XX, XXXX</p>
+              <p className="text-xs text-white/90 leading-relaxed">{ContactInfo.ADDRESS}</p>
             </div>
           </div>
         </div>
@@ -187,7 +188,7 @@ export const Sidebar = ({ selectedCategory, onCategorySelect }: SidebarProps) =>
                 </svg>
                 <div>
                   <p className="font-semibold text-gray-800 mb-1">Peça por delivery!</p>
-                  <p className="text-gray-600">(XX) XXXXX-XXXX</p>
+                  <p className="text-gray-600">{ContactInfo.PHONE}</p>
                 </div>
               </div>
 
@@ -197,7 +198,7 @@ export const Sidebar = ({ selectedCategory, onCategorySelect }: SidebarProps) =>
                 </svg>
                 <div>
                   <p className="font-semibold text-gray-800 mb-1">Conheça nosso espaço!</p>
-                  <p className="text-gray-600">R. XXXXXXXXX XXXXXX, XX, XXXX</p>
+                  <p className="text-gray-600">{ContactInfo.ADDRESS}</p>
                 </div>
               </div>
             </div>
