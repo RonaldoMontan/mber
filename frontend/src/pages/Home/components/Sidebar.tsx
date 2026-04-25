@@ -91,7 +91,7 @@ export const Sidebar = ({ selectedCategory, onCategorySelect }: SidebarProps) =>
             </div>
             <div>
               <p className="text-sm font-bold mb-1">Delivery</p>
-              <p className="text-xs text-white/90">(XX) XXXXX-XXXX</p>
+              <p className="text-xs text-white/90">(19) 98860-6368</p>
             </div>
           </div>
 
