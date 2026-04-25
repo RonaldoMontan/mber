@@ -231,9 +231,6 @@ Para testes, utilize:
     },
     'PREPROCESSING_HOOKS': [],
     'POSTPROCESSING_HOOKS': [],
-    'ENUM_NAME_OVERRIDES': {
-        'CategoryEnum': 'menu.models.MenuItem.CATEGORY_CHOICES',
-        'WeekdayEnum': 'menu.models.MenuItem.WEEKDAY_CHOICES',
-    },
+    'ENUM_NAME_OVERRIDES': {},
     'SCHEMA_COERCE_PATH_PK_SUFFIX': True,
 }
