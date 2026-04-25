@@ -33,7 +33,6 @@ class MenuItemAdmin(admin.ModelAdmin):
     list_display = [
         'name',
         'display_categories',
-        'display_weekdays',
         'lunch_box_price_small',
         'lunch_box_price_medium',
         'lunch_box_price_large',
@@ -52,8 +51,7 @@ class MenuItemAdmin(admin.ModelAdmin):
             'fields': ('name', 'side_dish', 'image', 'categories')
         }),
         ('Availability', {
-            'fields': ('weekdays', 'is_active'),
-            'description': 'Leave weekdays empty for items available every day'
+            'fields': ('is_active',),
         }),
         ('Pricing', {
             'fields': (
@@ -73,11 +71,6 @@ class MenuItemAdmin(admin.ModelAdmin):
         return ', '.join([cat.name for cat in obj.categories.all()])
     display_categories.short_description = 'Categorias'
     
-    def display_weekdays(self, obj):
-        if not obj.weekdays:
-            return 'Every day'
-        return ', '.join([day.capitalize() for day in obj.weekdays])
-    display_weekdays.short_description = 'Available Days'
 
 
 @admin.register(MenuItemSchedule)

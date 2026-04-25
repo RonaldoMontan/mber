@@ -50,7 +50,6 @@ class MenuItemSerializer(serializers.ModelSerializer):
             'lunch_box_price_medium',
             'lunch_box_price_large',
             'daily_plate_price',
-            'weekdays',
             'is_active',
             'created_at',
             'updated_at',
@@ -84,10 +83,6 @@ class MenuItemSerializer(serializers.ModelSerializer):
                 'help_text': 'Preço do prato do dia',
                 'required': False,
             },
-            'weekdays': {
-                'help_text': 'Lista de dias da semana em que o item está disponível (monday, tuesday, etc.). Lista vazia = disponível todos os dias',
-                'required': False,
-            },
             'is_active': {
                 'help_text': 'Indica se o item está ativo e disponível no cardápio'
             },
@@ -113,15 +108,6 @@ class MenuItemSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'At least one price must be provided (lunch box or daily plate).'
             )
-        
-        weekdays = data.get('weekdays', [])
-        if weekdays:
-            valid_weekdays = [choice[0] for choice in MenuItem.WEEKDAY_CHOICES]
-            for weekday in weekdays:
-                if weekday not in valid_weekdays:
-                    raise serializers.ValidationError({
-                        'weekdays': f'Invalid weekday: {weekday}. Must be one of {valid_weekdays}'
-                    })
         
         return data
     

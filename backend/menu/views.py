@@ -174,20 +174,6 @@ class MenuItemViewSet(viewsets.ModelViewSet):
         if is_active is not None:
             queryset = queryset.filter(is_active=is_active.lower() == 'true')
 
-        apply_weekday_filter = (
-            not (self.request.user and self.request.user.is_authenticated)
-            or self.request.query_params.get('available_today') in ['1', 'true', 'True']
-        )
-
-        if apply_weekday_filter:
-            current_weekday = datetime.now().strftime('%A').lower()
-            filtered_items = []
-            for item in queryset:
-                if not item.weekdays or current_weekday in item.weekdays:
-                    filtered_items.append(item.pk)
-
-            queryset = queryset.filter(pk__in=filtered_items)
-
         queryset = queryset.distinct()
 
         return queryset
