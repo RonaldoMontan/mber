@@ -1,3 +1,4 @@
+import os
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group, Permission, User
 from django.contrib.contenttypes.models import ContentType
@@ -37,6 +38,47 @@ class Command(BaseCommand):
                 )
             
             self.stdout.write(f'  {group_data["description"]}')
+
+        if os.environ.get('ENVIRONMENT', '').lower() in ('dev', 'stg'):
+            manager_group = Group.objects.get(name='Manager')
+            dev_user, created = User.objects.get_or_create(
+                username='developer',
+                defaults={
+                    'email': 'developer@mber.com',
+                    'first_name': 'Developer',
+                    'last_name': 'User',
+                    'is_staff': True,
+                    'is_active': True,
+                }
+            )
+
+            if created:
+                dev_user.set_password('dev123')
+                dev_user.save()
+                self.stdout.write(self.style.SUCCESS('✓ Created development user: developer / dev123'))
+            else:
+                updated = False
+                if not dev_user.is_active:
+                    dev_user.is_active = True
+                    updated = True
+                if not dev_user.is_staff:
+                    dev_user.is_staff = True
+                    updated = True
+
+                if not dev_user.check_password('dev123'):
+                    dev_user.set_password('dev123')
+                    updated = True
+
+                if updated:
+                    dev_user.save()
+                    self.stdout.write(self.style.WARNING('○ Updated development user credentials/status'))
+                else:
+                    self.stdout.write(self.style.WARNING('○ Development user already configured'))
+
+            dev_user.groups.add(manager_group)
+            self.stdout.write(self.style.SUCCESS('✓ Ensured development user is in Manager group'))
+        else:
+            self.stdout.write(self.style.WARNING('○ Skipping dev user (ENVIRONMENT not dev/stg)'))
 
         self.stdout.write('\n' + self.style.SUCCESS('Groups setup completed!'))
         self.stdout.write('\nNext steps:')

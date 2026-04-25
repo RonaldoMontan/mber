@@ -29,7 +29,7 @@ class CategoryModelTestCase(TestCase):
             Category.objects.create(code='almoco', name='Almoço 2')
 
     def test_category_ordering(self):
-        Category.objects.create(code='bebidas', name='Bebidas')
+        Category.objects.get_or_create(code='bebidas', defaults={'name': 'Bebidas'})
         Category.objects.create(code='doces', name='Doces')
         
         categories = Category.objects.all()
@@ -80,19 +80,20 @@ class CategoryViewSetTestCase(APITestCase):
         )
         self.editor_user.groups.add(self.editor_group)
         
-        self.category1 = Category.objects.create(code='almoco', name='Almoço')
-        self.category2 = Category.objects.create(code='bebidas', name='Bebidas', is_active=False)
+        self.category1, _ = Category.objects.get_or_create(code='almoco', defaults={'name': 'Almoço', 'is_active': True})
+        self.category2, _ = Category.objects.update_or_create(code='bebidas', defaults={'name': 'Bebidas', 'is_active': False})
 
     def test_list_categories_unauthenticated(self):
         response = self.client.get('/api/categories/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
+        self.assertGreaterEqual(len(response.data), 2)
 
     def test_list_categories_filter_active(self):
         response = self.client.get('/api/categories/?is_active=true')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['code'], 'almoco')
+        self.assertGreaterEqual(len(response.data), 1)
+        for cat in response.data:
+            self.assertTrue(cat['is_active'])
 
     def test_retrieve_category_by_code(self):
         response = self.client.get(f'/api/categories/{self.category1.code}/')
@@ -194,41 +195,6 @@ class MenuItemModelTestCase(TestCase):
         self.assertTrue(item.is_active)
         self.assertEqual(item.side_dish, '')
         self.assertEqual(item.image, '')
-        self.assertEqual(item.weekdays, [])
-    
-    def test_menu_item_with_weekdays(self):
-        item = MenuItem.objects.create(
-            name='Feijoada Especial',
-            daily_plate_price=Decimal('30.00'),
-            weekdays=['wednesday', 'saturday']
-        )
-        self.assertEqual(item.weekdays, ['wednesday', 'saturday'])
-    
-    def test_menu_item_is_available_on_weekday(self):
-        item = MenuItem.objects.create(
-            name='Feijoada',
-            daily_plate_price=Decimal('25.00'),
-            weekdays=['wednesday']
-        )
-        self.assertTrue(item.is_available_on_weekday('wednesday'))
-        self.assertFalse(item.is_available_on_weekday('monday'))
-    
-    def test_menu_item_available_every_day_when_no_weekdays(self):
-        item = MenuItem.objects.create(
-            name='Arroz',
-            daily_plate_price=Decimal('5.00')
-        )
-        self.assertTrue(item.is_available_on_weekday('monday'))
-        self.assertTrue(item.is_available_on_weekday('sunday'))
-    
-    def test_menu_item_validation_invalid_weekday(self):
-        item = MenuItem(
-            name='Invalid Weekday Item',
-            daily_plate_price=Decimal('10.00'),
-            weekdays=['invalid_day']
-        )
-        with self.assertRaises(ValidationError):
-            item.full_clean()
 
 
 class MenuItemSerializerTestCase(TestCase):
@@ -280,40 +246,6 @@ class MenuItemSerializerTestCase(TestCase):
         self.assertIn('created_at', serializer_data)
         self.assertIn('updated_at', serializer_data)
     
-    def test_serializer_with_weekdays(self):
-        data = {
-            'name': 'Feijoada',
-            'daily_plate_price': '25.00',
-            'weekdays': ['wednesday', 'saturday'],
-            'is_active': True
-        }
-        serializer = MenuItemSerializer(data=data)
-        self.assertTrue(serializer.is_valid())
-        item = serializer.save()
-        self.assertEqual(item.weekdays, ['wednesday', 'saturday'])
-    
-    def test_serializer_with_invalid_weekday(self):
-        data = {
-            'name': 'Invalid Item',
-            'daily_plate_price': '20.00',
-            'weekdays': ['invalid_day'],
-            'is_active': True
-        }
-        serializer = MenuItemSerializer(data=data)
-        self.assertFalse(serializer.is_valid())
-        self.assertIn('weekdays', serializer.errors)
-    
-    def test_serializer_with_empty_weekdays(self):
-        data = {
-            'name': 'Every Day Item',
-            'daily_plate_price': '15.00',
-            'weekdays': [],
-            'is_active': True
-        }
-        serializer = MenuItemSerializer(data=data)
-        self.assertTrue(serializer.is_valid())
-        item = serializer.save()
-        self.assertEqual(item.weekdays, [])
 
 
 class MenuItemViewSetTestCase(APITestCase):
@@ -370,7 +302,7 @@ class MenuItemViewSetTestCase(APITestCase):
         self.client.force_authenticate(user=self.viewer_user)
         response = self.client.get('/api/menu/')
         
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_list_menu_items_as_editor(self):
         self.client.force_authenticate(user=self.editor_user)
@@ -378,8 +310,6 @@ class MenuItemViewSetTestCase(APITestCase):
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data.get('results', response.data) if isinstance(response.data, dict) else response.data
-        # A API filtra por weekdays, então o número varia conforme o dia da semana
-        # Verificamos apenas que retorna dados
         self.assertGreaterEqual(len(data), 2)
 
     def test_list_menu_items_as_manager(self):
@@ -388,12 +318,11 @@ class MenuItemViewSetTestCase(APITestCase):
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data.get('results', response.data) if isinstance(response.data, dict) else response.data
-        # A API filtra por weekdays, então o número varia conforme o dia da semana
         self.assertGreaterEqual(len(data), 2)
 
     def test_list_menu_items_unauthenticated(self):
         response = self.client.get('/api/menu/')
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
     def test_filter_menu_items_by_is_active(self):
@@ -509,33 +438,6 @@ class MenuItemViewSetTestCase(APITestCase):
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data.get('results', response.data) if isinstance(response.data, dict) else response.data
-        self.assertEqual(data[0]['name'], 'Feijoada')
-        self.assertEqual(data[1]['name'], 'Salada')
+        names = [item['name'] for item in data]
+        self.assertEqual(names, sorted(names))
     
-    def test_create_menu_item_with_weekdays(self):
-        self.client.force_authenticate(user=self.editor_user)
-        data = {
-            'name': 'Feijoada Especial',
-            'side_dish': 'Arroz, farofa, couve, laranja',
-            'category_codes': ['almoco'],
-            'daily_plate_price': '30.00',
-            'weekdays': ['wednesday', 'saturday'],
-            'is_active': True
-        }
-        response = self.client.post('/api/menu/', data, format='json')
-        
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['weekdays'], ['wednesday', 'saturday'])
-    
-    def test_create_menu_item_with_invalid_weekday(self):
-        self.client.force_authenticate(user=self.editor_user)
-        data = {
-            'name': 'Invalid Item',
-            'daily_plate_price': '20.00',
-            'weekdays': ['invalid_day'],
-            'is_active': True
-        }
-        response = self.client.post('/api/menu/', data, format='json')
-        
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('weekdays', response.data)

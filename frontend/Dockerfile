@@ -11,8 +11,8 @@ RUN npm install
 # Copia o resto do código para dentro do container
 COPY . .
 
-# Expõe a porta do Vite (padrão 5173)
-EXPOSE 5173
+# Expõe a porta do Vite configurada no projeto
+EXPOSE 3000
 
 # Comando para rodar em modo desenvolvimento
 CMD ["npm", "run", "dev", "--", "--host"]

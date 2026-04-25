@@ -27,6 +27,7 @@ export interface MenuItem {
   side_dish?: string;
   image?: string;
   category?: MenuCategory;
+  category_codes?: string[];
   categories_detail?: CategoryDetail[];
   lunch_box_price_small?: string;
   lunch_box_price_medium?: string;
@@ -42,7 +43,7 @@ export interface MenuItemRequest {
   name: string;
   side_dish?: string;
   image?: string;
-  category?: MenuCategory;
+  category_codes?: string[];
   lunch_box_price_small?: string;
   lunch_box_price_medium?: string;
   lunch_box_price_large?: string;
@@ -55,7 +56,7 @@ export interface PatchedMenuItemRequest {
   name?: string;
   side_dish?: string;
   image?: string;
-  category?: MenuCategory;
+  category_codes?: string[];
   lunch_box_price_small?: string;
   lunch_box_price_medium?: string;
   lunch_box_price_large?: string;
@@ -67,4 +68,7 @@ export interface PatchedMenuItemRequest {
 export interface MenuListParams {
   ordering?: string;
   search?: string;
+  category?: string;
+  is_active?: boolean;
+  special_candidates?: boolean;
 }
