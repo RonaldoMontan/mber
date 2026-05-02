@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { PageHeader } from '../components';
-import { Modal, Button, Input, ConfirmDialog } from '../../../components';
+import { Modal, Button, Input, ConfirmDialog, ImageUpload } from '../../../components';
 import { menu } from '../../../api';
 import type { MenuItem, CategoryDetail } from '../../../api/menu/menu.types';
 
@@ -470,11 +470,10 @@ const MenuItems = () => {
             </div>
 
             <div className="md:col-span-2">
-              <Input
-                label="URL da Imagem"
-                placeholder="https://exemplo.com/imagem.jpg"
+              <ImageUpload
+                label="Imagem do Item"
                 value={formData.image}
-                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                onChange={(url) => setFormData({ ...formData, image: url })}
               />
             </div>
 

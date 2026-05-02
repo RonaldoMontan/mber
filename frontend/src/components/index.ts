@@ -8,3 +8,4 @@ export { Modal } from './Modal';
 export { ConfirmDialog } from './ConfirmDialog';
 export { ResponsiveTable } from './ResponsiveTable';
 export { AppErrorBoundary } from './AppErrorBoundary';
+export { ImageUpload } from './ImageUpload';
