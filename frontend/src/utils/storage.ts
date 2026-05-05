@@ -5,8 +5,18 @@ const TOKEN_KEYS = {
 } as const;
 
 export const saveTokens = (access: string, refresh: string): void => {
-  localStorage.setItem(TOKEN_KEYS.ACCESS, access);
-  localStorage.setItem(TOKEN_KEYS.REFRESH, refresh);
+  try {
+    if (!access || !refresh || typeof access !== 'string' || typeof refresh !== 'string') {
+      console.warn('Invalid tokens provided to saveTokens');
+      clearTokens();
+      return;
+    }
+    localStorage.setItem(TOKEN_KEYS.ACCESS, access);
+    localStorage.setItem(TOKEN_KEYS.REFRESH, refresh);
+  } catch (error) {
+    console.error('Failed to save tokens:', error);
+    clearTokens();
+  }
 };
 
 export const getAccessToken = (): string | null => {
@@ -23,16 +33,33 @@ export const clearTokens = (): void => {
 };
 
 export const saveUser = (user: any): void => {
-  localStorage.setItem(TOKEN_KEYS.USER, JSON.stringify(user));
+  try {
+    if (!user || typeof user !== 'object') {
+      console.warn('Invalid user provided to saveUser');
+      clearUser();
+      return;
+    }
+    localStorage.setItem(TOKEN_KEYS.USER, JSON.stringify(user));
+  } catch (error) {
+    console.error('Failed to save user:', error);
+    clearUser();
+  }
 };
 
 export const getUser = (): any | null => {
-  const userStr = localStorage.getItem(TOKEN_KEYS.USER);
-  if (!userStr) return null;
-  
   try {
-    return JSON.parse(userStr);
-  } catch {
+    const userStr = localStorage.getItem(TOKEN_KEYS.USER);
+    if (!userStr) return null;
+    
+    const parsed = JSON.parse(userStr);
+    if (!parsed || typeof parsed !== 'object') {
+      clearUser();
+      return null;
+    }
+    return parsed;
+  } catch (error) {
+    console.warn('Failed to parse stored user data, clearing cache');
+    clearUser();
     return null;
   }
 };

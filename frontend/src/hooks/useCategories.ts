@@ -21,14 +21,25 @@ export const useCategories = () => {
       try {
         setLoading(true);
         const data = await api.get<Category[] | { results?: Category[] }>('/api/categories/?is_active=true');
-        const normalized = Array.isArray(data)
-          ? data
-          : Array.isArray(data?.results)
-            ? data.results
-            : [];
-        setCategories(normalized);
+        
+        let normalized: Category[] = [];
+        if (Array.isArray(data)) {
+          normalized = data;
+        } else if (data && typeof data === 'object' && Array.isArray(data?.results)) {
+          normalized = data.results;
+        } else {
+          console.warn('Unexpected categories data format:', data);
+          normalized = [];
+        }
+        
+        const filtered = normalized.filter((cat: any): cat is Category => {
+          return cat && typeof cat === 'object' && cat.is_active === true;
+        });
+        
+        setCategories(filtered);
         setError(null);
       } catch (err: any) {
+        console.error('Failed to load categories:', err);
         setError(err.message || 'Erro ao carregar categorias');
         setCategories([]);
       } finally {
