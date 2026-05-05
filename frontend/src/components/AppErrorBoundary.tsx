@@ -31,9 +31,13 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
   }
 
   handleReset = () => {
-    clearAll();
+    try {
+      clearAll();
+    } catch (e) {
+      console.error('Failed to clear storage:', e);
+    }
     this.setState({ hasError: false, message: '' });
-    window.location.reload();
+    setTimeout(() => window.location.reload(), 100);
   };
 
   render() {
