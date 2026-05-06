@@ -20,16 +20,30 @@ export const saveTokens = (access: string, refresh: string): void => {
 };
 
 export const getAccessToken = (): string | null => {
-  return localStorage.getItem(TOKEN_KEYS.ACCESS);
+  try {
+    return localStorage.getItem(TOKEN_KEYS.ACCESS);
+  } catch (error) {
+    console.warn('Failed to read access token:', error);
+    return null;
+  }
 };
 
 export const getRefreshToken = (): string | null => {
-  return localStorage.getItem(TOKEN_KEYS.REFRESH);
+  try {
+    return localStorage.getItem(TOKEN_KEYS.REFRESH);
+  } catch (error) {
+    console.warn('Failed to read refresh token:', error);
+    return null;
+  }
 };
 
 export const clearTokens = (): void => {
-  localStorage.removeItem(TOKEN_KEYS.ACCESS);
-  localStorage.removeItem(TOKEN_KEYS.REFRESH);
+  try {
+    localStorage.removeItem(TOKEN_KEYS.ACCESS);
+    localStorage.removeItem(TOKEN_KEYS.REFRESH);
+  } catch (error) {
+    console.warn('Failed to clear tokens:', error);
+  }
 };
 
 export const saveUser = (user: any): void => {
@@ -65,7 +79,11 @@ export const getUser = (): any | null => {
 };
 
 export const clearUser = (): void => {
-  localStorage.removeItem(TOKEN_KEYS.USER);
+  try {
+    localStorage.removeItem(TOKEN_KEYS.USER);
+  } catch (error) {
+    console.warn('Failed to clear user:', error);
+  }
 };
 
 export const clearAll = (): void => {
