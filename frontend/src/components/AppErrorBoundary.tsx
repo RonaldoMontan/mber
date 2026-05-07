@@ -45,7 +45,7 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
       return (
         <div className="min-h-screen flex items-center justify-center bg-red-50 p-6">
           <div className="max-w-2xl rounded-xl border border-red-200 bg-white p-6 shadow-sm">
-            <h1 className="text-xl font-bold text-red-700 mb-2">Falha ao renderizar o cardapio</h1>
+            <h1 className="text-xl font-bold text-red-700 mb-2">Falha ao renderizar o cardápio</h1>
             <p className="text-sm text-gray-700 mb-3">
               A interface encontrou um erro de JavaScript. Tente limpar o cache e atualizar. Se persistir, copie a mensagem abaixo.
             </p>

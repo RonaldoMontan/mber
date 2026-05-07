@@ -28,7 +28,7 @@ const Home = () => {
   }, []);
 
   if (loading) {
-    return <Loading message="Carregando cardápio..." />;
+    return <Loading message="Estamos preparando tudo com carinho para você!" />;
   }
 
   if (error) {
@@ -86,7 +86,7 @@ const Home = () => {
 
         {!isDrinksView && todaySchedule && !todaySchedule.is_open ? (
           <section className="w-full max-w-4xl mb-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-            <p className="text-xs uppercase tracking-[0.25em] text-red-700">Programacao de hoje</p>
+            <p className="text-xs uppercase tracking-[0.25em] text-red-700">Programação de hoje</p>
             <h2 className="mt-2 text-2xl font-black text-red-700">Hoje estamos fechados</h2>
             <p className="mt-2 text-sm text-gray-600">{todaySchedule.note || 'Sem atendimento para a data de hoje.'}</p>
           </section>
@@ -94,7 +94,7 @@ const Home = () => {
 
         {!isDrinksView && todaySchedule && todaySchedule.is_open && !dailyDish ? (
           <section className="w-full max-w-4xl mb-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-            <p className="text-xs uppercase tracking-[0.25em] text-red-700">Programacao de hoje</p>
+            <p className="text-xs uppercase tracking-[0.25em] text-red-700">Programação de hoje</p>
             <h2 className="mt-2 text-2xl font-black text-red-700">Sem prato do dia programado</h2>
             <p className="mt-2 text-sm text-gray-600">
               {todaySchedule.note || 'Infelizmente nao temos prato do dia disponivel hoje. Confira as outras opcoes do cardapio.'}
@@ -147,10 +147,10 @@ const Home = () => {
         ) : null}
 
         {menuItems.length === 0 ? (
-          <p className="text-center text-gray-400 text-xl">Nenhum item disponivel hoje no cardapio principal.</p>
+          <p className="text-center text-gray-400 text-xl">Nenhum item disponivel hoje no cardápio principal.</p>
         ) : isGeneralMenuView ? (
           <section className="w-full max-w-4xl">
-            <h1 className="text-5xl font-black text-[#B22222] mb-8 uppercase italic text-center">Cardapio</h1>
+            <h1 className="text-5xl font-black text-[#B22222] mb-8 uppercase italic text-center">Cardápio</h1>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {mainMenuItems.map((item) => (
                 <MenuItemCard key={item.id} item={item} variant="highlight" />
