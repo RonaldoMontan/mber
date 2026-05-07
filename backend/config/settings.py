@@ -71,6 +71,9 @@ DEBUG = _get_bool_env('DEBUG', default=False)
 
 ALLOWED_HOSTS = _parse_comma_separated_env('ALLOWED_HOSTS', ['localhost', '127.0.0.1'])
 
+if DEBUG and not os.getenv('ALLOWED_HOSTS'):
+    ALLOWED_HOSTS = ['*']
+
 
 # Application definition
 
