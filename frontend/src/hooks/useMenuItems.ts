@@ -12,15 +12,27 @@ export const useMenuItems = () => {
       setLoading(true);
       setError(null);
       const data = await menu.getMenuItems({ ordering: 'name' });
-      const normalized = Array.isArray(data)
-        ? data
-        : Array.isArray((data as any)?.results)
-          ? (data as any).results
-          : [];
-      setItems(normalized.filter((item: MenuItem) => item.is_active));
+      
+      let normalized: MenuItem[] = [];
+      if (Array.isArray(data)) {
+        normalized = data;
+      } else if (data && typeof data === 'object' && Array.isArray((data as any)?.results)) {
+        normalized = (data as any).results;
+      } else {
+        console.warn('Unexpected menu data format:', data);
+        normalized = [];
+      }
+      
+      const filtered = normalized
+        .filter((item: any): item is MenuItem => {
+          return item && typeof item === 'object' && item.is_active === true;
+        });
+      
+      setItems(filtered);
     } catch (err: any) {
       console.error('Erro ao buscar itens do menu:', err);
       setError(err.message || 'Erro ao carregar menu');
+      setItems([]);
     } finally {
       setLoading(false);
     }

@@ -31,11 +31,11 @@ export async function logout(): Promise<LogoutResponse> {
   }
 
   const logoutData: LogoutRequest = { refresh: refreshToken };
-  const response = await request.post<LogoutResponse>('/api/auth/logout/', logoutData);
-  
-  clearAll();
-  
-  return response;
+  try {
+    return await request.post<LogoutResponse>('/api/auth/logout/', logoutData);
+  } finally {
+    clearAll();
+  }
 }
 
 export async function register(userData: RegisterRequest): Promise<RegisterResponse> {
