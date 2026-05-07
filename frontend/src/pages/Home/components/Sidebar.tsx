@@ -2,6 +2,21 @@ import { useCategories } from '../../../hooks/useCategories';
 import { useState } from 'react';
 import { ContactInfo } from '../../../enums/contact';
 
+const buildWhatsAppUrl = (phone: string, message: string) => {
+  const digits = phone.replace(/\D/g, '');
+  const internationalPhone = digits.startsWith('55') ? digits : `55${digits}`;
+
+  return `https://wa.me/${internationalPhone}?text=${encodeURIComponent(message)}`;
+};
+
+const whatsappUrl = buildWhatsAppUrl(
+  ContactInfo.PHONE,
+  'Olá! Vim pelo cardápio online e gostaria de fazer um pedido de delivery.',
+);
+
+const googleMapsUrl =
+  'https://www.google.com/maps/@-22.9275298,-47.2663577,3a,73.8y,173.54h,96.61t/data=!3m7!1e1!3m5!1sEq2TgFKL_di4VixR7XOC_Q!2e0!6shttps:%2F%2Fstreetviewpixels-pa.googleapis.com%2Fv1%2Fthumbnail%3Fcb_client%3Dmaps_sv.tactile%26w%3D900%26h%3D600%26pitch%3D-6.6139390128654725%26panoid%3DEq2TgFKL_di4VixR7XOC_Q%26yaw%3D173.53624379996273!7i16384!8i8192?entry=ttu&g_ep=EgoyMDI2MDUwMi4wIKXMDSoASAFQAw%3D%3D';
+
 interface SidebarProps {
   selectedCategory: string | null;
   onCategorySelect: (categoryCode: string | null) => void;
@@ -17,13 +32,13 @@ export const Sidebar = ({ selectedCategory, onCategorySelect }: SidebarProps) =>
       {/* DESKTOP SIDEBAR - Escondida em mobile */}
       <aside className="hidden md:flex w-80 bg-gradient-to-b from-[#B22222] via-[#A01F1F] to-[#8B0000] text-white flex-col fixed h-full shadow-2xl overflow-y-auto">
         {/* Logo Section */}
-        <div className="flex flex-col items-center py-10 px-6 bg-black/10">
-          <div className="w-40 h-40 rounded-full bg-white/10 backdrop-blur-sm border-4 border-white/20 flex items-center justify-center mb-6 p-6 shadow-xl hover:scale-105 transition-transform duration-300">
+        <div className="flex flex-col items-center py-0 px-6 bg-black/10">
+          <div className="w-96 h-96 flex items-center justify-center mb-3 hover:scale-105 transition-transform duration-300">
             <img src="/logo-sidebar.png" alt="Logo" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-3xl font-black tracking-wider text-[#FFC107] drop-shadow-lg">MBER</h1>
-          <p className="text-sm text-white/90 mt-2 font-medium tracking-wide">MINAS BAR E RESTAURANTE</p>
-          <div className="w-20 h-1 bg-[#FFC107] mt-4 rounded-full"></div>
+          <p className="text-sm text-white/90 mt-1 font-medium tracking-wide">MINAS BAR E RESTAURANTE</p>
+          <div className="w-20 h-1 bg-[#FFC107] mt-2 rounded-full"></div>
         </div>
 
         {/* Navigation */}
@@ -84,7 +99,13 @@ export const Sidebar = ({ selectedCategory, onCategorySelect }: SidebarProps) =>
         <div className="px-6 py-8 space-y-4 bg-black/20 backdrop-blur-sm">
           <h3 className="text-sm font-bold uppercase tracking-wider text-[#FFC107] mb-4">Contato</h3>
           
-          <div className="flex items-start gap-4 p-4 bg-white/10 rounded-xl hover:bg-white/15 transition-colors backdrop-blur-sm">
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-start gap-4 p-4 bg-white/10 rounded-xl hover:bg-white/15 transition-colors backdrop-blur-sm"
+            aria-label="Falar no WhatsApp para delivery"
+          >
             <div className="w-10 h-10 rounded-full bg-[#FFC107] flex items-center justify-center flex-shrink-0">
               <svg className="w-5 h-5 text-[#B22222]" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/>
@@ -94,9 +115,15 @@ export const Sidebar = ({ selectedCategory, onCategorySelect }: SidebarProps) =>
               <p className="text-sm font-bold mb-1">Delivery</p>
               <p className="text-xs text-white/90">{ContactInfo.PHONE}</p>
             </div>
-          </div>
+          </a>
 
-          <div className="flex items-start gap-4 p-4 bg-white/10 rounded-xl hover:bg-white/15 transition-colors backdrop-blur-sm">
+          <a
+            href={googleMapsUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-start gap-4 p-4 bg-white/10 rounded-xl hover:bg-white/15 transition-colors backdrop-blur-sm"
+            aria-label="Abrir endereço no Google Maps"
+          >
             <div className="w-10 h-10 rounded-full bg-[#FFC107] flex items-center justify-center flex-shrink-0">
               <svg className="w-5 h-5 text-[#B22222]" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
@@ -106,7 +133,7 @@ export const Sidebar = ({ selectedCategory, onCategorySelect }: SidebarProps) =>
               <p className="text-sm font-bold mb-1">Endereço</p>
               <p className="text-xs text-white/90 leading-relaxed">{ContactInfo.ADDRESS}</p>
             </div>
-          </div>
+          </a>
         </div>
       </aside>
 
@@ -114,7 +141,7 @@ export const Sidebar = ({ selectedCategory, onCategorySelect }: SidebarProps) =>
       <div className="md:hidden fixed top-0 left-0 right-0 bg-[#B22222] text-white shadow-lg z-50">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full border-2 border-white/30 flex items-center justify-center p-1">
+            <div className="w-36 h-36 flex items-center justify-center">
               <img src="/logo-sidebar.png" alt="Logo" className="w-full h-full object-contain" />
             </div>
             <div>
@@ -182,7 +209,13 @@ export const Sidebar = ({ selectedCategory, onCategorySelect }: SidebarProps) =>
             </div>
 
             <div className="space-y-4">
-              <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl transition-colors hover:bg-gray-100"
+                aria-label="Abrir WhatsApp para pedir delivery"
+              >
                 <svg className="w-6 h-6 text-[#B22222] flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/>
                 </svg>
@@ -190,9 +223,15 @@ export const Sidebar = ({ selectedCategory, onCategorySelect }: SidebarProps) =>
                   <p className="font-semibold text-gray-800 mb-1">Peça por delivery!</p>
                   <p className="text-gray-600">{ContactInfo.PHONE}</p>
                 </div>
-              </div>
+              </a>
 
-              <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
+              <a
+                href={googleMapsUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl transition-colors hover:bg-gray-100"
+                aria-label="Abrir endereço no Google Maps"
+              >
                 <svg className="w-6 h-6 text-[#B22222] flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
                 </svg>
@@ -200,7 +239,7 @@ export const Sidebar = ({ selectedCategory, onCategorySelect }: SidebarProps) =>
                   <p className="font-semibold text-gray-800 mb-1">Conheça nosso espaço!</p>
                   <p className="text-gray-600">{ContactInfo.ADDRESS}</p>
                 </div>
-              </div>
+              </a>
             </div>
           </div>
         </div>

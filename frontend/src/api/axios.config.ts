@@ -12,7 +12,22 @@ let failedQueue: Array<{
   resolve: (value?: any) => void;
   reject: (reason?: any) => void;
 }> = [];
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
+const getDefaultApiBaseUrl = () => {
+  if (typeof window === 'undefined') {
+    return '';
+  }
+
+  if (import.meta.env.DEV) {
+    const protocol = window.location.protocol || 'http:';
+    const hostname = window.location.hostname || 'localhost';
+    return `${protocol}//${hostname}:8000`;
+  }
+
+  return '';
+};
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || getDefaultApiBaseUrl();
 
 const processQueue = (error: any, token: string | null = null) => {
   failedQueue.forEach(prom => {
