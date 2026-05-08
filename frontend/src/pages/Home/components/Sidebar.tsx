@@ -14,6 +14,7 @@ const whatsappUrl = buildWhatsAppUrl(
   'Olá! Vim pelo cardápio online e gostaria de fazer um pedido de delivery.',
 );
 
+
 const googleMapsUrl =
   'https://www.google.com/maps/@-22.9275298,-47.2663577,3a,73.8y,173.54h,96.61t/data=!3m7!1e1!3m5!1sEq2TgFKL_di4VixR7XOC_Q!2e0!6shttps:%2F%2Fstreetviewpixels-pa.googleapis.com%2Fv1%2Fthumbnail%3Fcb_client%3Dmaps_sv.tactile%26w%3D900%26h%3D600%26pitch%3D-6.6139390128654725%26panoid%3DEq2TgFKL_di4VixR7XOC_Q%26yaw%3D173.53624379996273!7i16384!8i8192?entry=ttu&g_ep=EgoyMDI2MDUwMi4wIKXMDSoASAFQAw%3D%3D';
 
