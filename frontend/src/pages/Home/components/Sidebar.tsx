@@ -34,11 +34,11 @@ export const Sidebar = ({ selectedCategory, onCategorySelect }: SidebarProps) =>
       <aside className="hidden md:flex w-80 bg-gradient-to-b from-[#B22222] via-[#A01F1F] to-[#8B0000] text-white flex-col fixed h-full shadow-2xl overflow-y-auto">
         {/* Logo Section */}
         <div className="flex flex-col items-center py-0 px-6 bg-black/10">
-          <div className="w-96 h-96 flex items-center justify-center mb-3 hover:scale-105 transition-transform duration-300">
+          <div className="w-62 h-62 flex items-center justify-center mb-1 hover:scale-105 transition-transform duration-300">
             <img src="/logo-sidebar.png" alt="Logo" className="w-full h-full object-contain" />
           </div>
-          <h1 className="text-3xl font-black tracking-wider text-[#FFC107] drop-shadow-lg">MBER</h1>
-          <p className="text-sm text-white/90 mt-1 font-medium tracking-wide">MINAS BAR E RESTAURANTE</p>
+          <h1 className="text-2xl font-black tracking-wider text-[#FFC107] drop-shadow-lg">MBER</h1>
+          <p className="text-xs text-white/90 mt-0.5 font-medium tracking-wide">MINAS BAR E RESTAURANTE</p>
           <div className="w-20 h-1 bg-[#FFC107] mt-2 rounded-full"></div>
         </div>
 
@@ -140,21 +140,21 @@ export const Sidebar = ({ selectedCategory, onCategorySelect }: SidebarProps) =>
 
       {/* MOBILE TOP BAR - Logo */}
       <div className="md:hidden fixed top-0 left-0 right-0 bg-[#B22222] text-white shadow-lg z-50">
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-36 h-36 flex items-center justify-center">
+        <div className="flex items-center justify-between px-3 py-2">
+          <div className="flex items-center gap-2">
+            <div className="w-20 h-20 flex items-center justify-center">
               <img src="/logo-sidebar.png" alt="Logo" className="w-full h-full object-contain" />
             </div>
             <div>
-              <h1 className="text-lg font-bold">MBER</h1>
-              <p className="text-xs text-white/80">MINAS BAR E RESTAURANTE</p>
+              <h1 className="text-base font-bold leading-tight">MBER</h1>
+              <p className="text-[10px] text-white/80 leading-tight">MINAS BAR E RESTAURANTE</p>
             </div>
           </div>
           <button 
             onClick={() => setShowContactModal(true)}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+            className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
           >
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/>
             </svg>
           </button>
